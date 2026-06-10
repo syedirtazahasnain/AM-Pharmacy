@@ -1,85 +1,108 @@
-{{-- resources/views/invoices/pdf.blade.php --}}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Invoice #{{ $invoice->invoice_number }}</title>
+    <title>Sales Tax Invoice #{{ $invoice->invoice_number }}</title>
     <style>
-        body { font-family: Arial, sans-serif; font-size: 12px; }
-        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .company-name { font-size: 20px; font-weight: bold; color: #166534; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f3f4f6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #000; }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
+        .company-name { font-size: 18px; font-weight: bold; }
+        .title { font-size: 14px; font-weight: bold; margin-top: 6px; text-decoration: underline; }
+        .meta { width: 100%; margin-bottom: 10px; }
+        .meta td { padding: 2px 4px; vertical-align: top; }
+        .customer-block { text-align: center; margin: 8px 0; font-weight: bold; }
+        table.items { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        table.items th { background: #333; color: #fff; padding: 5px 4px; font-size: 9px; text-align: center; border: 1px solid #333; }
+        table.items td { padding: 4px; border: 1px solid #ccc; font-size: 10px; }
         .text-right { text-align: right; }
-        .total-row { font-weight: bold; }
-        .warranty { margin-top: 30px; font-size: 9px; border-top: 1px solid #000; padding-top: 10px; }
-        .signature { margin-top: 40px; text-align: right; }
+        .text-center { text-align: center; }
+        .totals-box { float: right; width: 220px; background: #f0f0f0; border: 1px solid #999; padding: 8px; margin-top: 8px; }
+        .totals-box p { margin: 3px 0; }
+        .totals-box .net { font-size: 13px; font-weight: bold; border-top: 1px solid #999; padding-top: 4px; margin-top: 4px; }
+        .summary-left { float: left; margin-top: 8px; }
+        .clearfix::after { content: ""; display: table; clear: both; }
+        .warranty { margin-top: 20px; font-size: 8px; border-top: 1px solid #000; padding-top: 8px; }
+        .signature { margin-top: 30px; text-align: right; font-size: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="company-name">A.M PHARMACY</div>
-        <div>Deals in All Kinds of Medicines Surgical & Disposable Items</div>
-        <div>Tulsa Road Rawalpindi | Ph # 0307-5558892</div>
-        <div>Drug Sale License No 01-374-0176-90485P | NTN NO 2392714-3</div>
+        <div class="company-name">{{ $pharmacy['business']['name'] }}</div>
+        <div>{{ $pharmacy['business']['tagline'] }}</div>
+        <div>{{ $pharmacy['business']['address'] }}. Ph # {{ implode(', ', $pharmacy['business']['phones']) }}</div>
+        <div>NTN NO {{ $pharmacy['business']['ntn'] }} &nbsp; STRN NO {{ $pharmacy['business']['strn'] }}</div>
+        <div class="title">SALES TAX INVOICE</div>
     </div>
 
-    <div>
-        <p><strong>DATE:</strong> {{ $invoice->date->format('d-M-Y') }}</p>
-        <p><strong>INVOICE NO:</strong> {{ $invoice->invoice_number }}</p>
-        <p><strong>CUSTOMER NO:</strong> {{ $invoice->customer->customer_number }}</p>
-        <p><strong>{{ $invoice->customer->name }}</strong></p>
-        <p><strong>DISTT:</strong> {{ $invoice->customer->district }}</p>
+    <table class="meta">
+        <tr>
+            <td width="50%"><strong>Invoice No:</strong> {{ $invoice->invoice_number }}</td>
+            <td width="50%" class="text-right"><strong>Date:</strong> {{ $invoice->date->format('d-M-Y') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Customer No:</strong> {{ $invoice->customer->customer_number }}</td>
+            <td class="text-right"><strong>Salesperson:</strong> {{ $invoice->salesperson }}</td>
+        </tr>
+    </table>
+
+    <div class="customer-block">
+        {{ $invoice->customer->name }}<br>
+        {{ $invoice->customer->district }} &amp; {{ $invoice->customer->phone }}
     </div>
 
-    <table>
+    <table class="items">
         <thead>
             <tr>
-                <th>PRODUCT NAME</th>
-                <th>MANUFACTURER</th>
-                <th>BATCH</th>
+                <th>ITEM NAME</th>
                 <th>PACK</th>
-                <th>EXPIRY</th>
                 <th>QTY</th>
-                <th>MRP</th>
-                <th>DISC%</th>
+                <th>RATE</th>
+                <th>BATCH-NO</th>
+                <th>AMOUNT</th>
+                <th>Disc%</th>
                 <th>TOTAL</th>
             </tr>
         </thead>
         <tbody>
             @foreach($invoice->items as $item)
             <tr>
-                <td>{{ $item->product->name }}</td>
-                <td>{{ $item->product->manufacturer->name ?? 'N/A' }}</td>
-                <td>{{ $item->batch->batch_number }}</td>
-                <td>{{ $item->product->pack_size ?? '-' }}</td>
-                <td>{{ $item->batch->expiry_date->format('d-M-y') }}</td>
-                <td>{{ $item->quantity }}</td>
-                <td>{{ number_format($item->rate, 2) }}</td>
-                <td>{{ $invoice->discount_percent }}</td>
-                <td>{{ number_format($item->total, 2) }}</td>
+                <td>{{ $item->display_product_name }}</td>
+                <td class="text-center">{{ $item->display_pack_size }}</td>
+                <td class="text-center">{{ $item->quantity }}</td>
+                <td class="text-right">{{ number_format($item->rate, 2) }}</td>
+                <td class="text-center">{{ $item->display_batch_number }}</td>
+                <td class="text-right">{{ number_format($item->amount, 2) }}</td>
+                <td class="text-center">{{ number_format($item->discount_percent, 0) }}</td>
+                <td class="text-right">{{ number_format($item->total, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
-    <div style="text-align: right; margin-top: 20px;">
-        <p><strong>Subtotal:</strong> {{ number_format($invoice->subtotal, 2) }}</p>
-        <p><strong>Discount ({{ $invoice->discount_percent }}%):</strong> {{ number_format($invoice->discount_value, 2) }}</p>
-        <p><strong>GST (18%):</strong> {{ number_format($invoice->gst_value, 2) }}</p>
-        <p style="font-size: 14px;"><strong>TOTAL INVOICE AMOUNT:</strong> {{ number_format($invoice->total, 2) }}</p>
+    <div class="clearfix">
+        <div class="summary-left">
+            <p><strong>TOTAL NO OF ITEMS:</strong> {{ $invoice->item_count }}</p>
+            @if($invoice->remarks)
+                <p><strong>Remarks:</strong> {{ $invoice->remarks }}</p>
+            @endif
+        </div>
+        <div class="totals-box">
+            <p><strong>GROSS TOTAL:</strong> <span style="float:right">{{ number_format($invoice->gross_total, 2) }}</span></p>
+            <p><strong>GST @ {{ number_format($invoice->gst_percent, 0) }}%:</strong> <span style="float:right">{{ number_format($invoice->gst_value, 2) }}</span></p>
+            <p class="net"><strong>NET TOTAL AMOUNT:</strong> <span style="float:right">{{ number_format($invoice->total, 2) }}</span></p>
+        </div>
     </div>
 
     <div class="warranty">
-        <p><strong>TOTAL NO OF ITEMS:</strong> {{ $invoice->items->count() }}</p>
+        <p><strong>WARRANTY</strong></p>
         <p>{{ $invoice->warranty_notes }}</p>
-        <p><strong>Note:</strong> A. For dated items we must be informed five months prior to expiry</p>
-        <p><strong>B.</strong> This Warranty does not apply to unani, homopatic, bio, chemic, herbal and General items if any mentioned in this invoice</p>
+        <p><strong>A.</strong> {{ $pharmacy['invoice']['warranty_note_a'] }}</p>
+        <p><strong>B.</strong> {{ $pharmacy['invoice']['warranty_note_b'] }}</p>
     </div>
 
     <div class="signature">
-        <p><strong>Signature</strong></p>
+        <p>Signature ____________________</p>
     </div>
 </body>
 </html>

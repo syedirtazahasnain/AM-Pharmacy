@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+// use App\Http\Controllers\ScrapingController;
 use App\Http\Controllers\StockController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+    // Route::get('/scraping', [ScrapingController::class, 'index'])->name('scraping.index');
+    // Route::post('/scraping/start', [ScrapingController::class, 'start'])->name('scraping.start');
+    // Route::get('/scraping/status/{batchId}', [ScrapingController::class, 'status'])->name('scraping.status');
+    // Route::post('/scraping/retry/{batchId}', [ScrapingController::class, 'retry'])->name('scraping.retry');
 
 
 Route::middleware(['auth'])->group(function () {

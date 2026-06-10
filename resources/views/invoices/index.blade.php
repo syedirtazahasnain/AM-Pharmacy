@@ -16,7 +16,10 @@
                             <th>Invoice #</th>
                             <th>Date</th>
                             <th>Customer</th>
-                            <th>Total</th>
+                            <th>Items</th>
+                            <th>Salesperson</th>
+                            <th>Gross Total</th>
+                            <th>Net Total</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -26,10 +29,13 @@
                             <td class="px-6 py-4">{{ $invoice->invoice_number }}</td>
                             <td>{{ $invoice->date->format('d-m-Y') }}</td>
                             <td>{{ $invoice->customer->name }}</td>
+                            <td class="text-center">{{ $invoice->item_count ?? $invoice->items->count() }}</td>
+                            <td>{{ $invoice->salesperson ?? '-' }}</td>
+                            <td>Rs. {{ number_format($invoice->gross_total ?? $invoice->subtotal, 2) }}</td>
                             <td>Rs. {{ number_format($invoice->total, 2) }}</td>
                             <td>
                                 <a href="{{ route('invoices.show', $invoice) }}" class="text-blue-600">View</a>
-                                <a href="{{ route('invoices.print', $invoice) }}" class="text-green-600 ml-2">Print PDF</a>
+                                <a href="{{ route('invoices.print', $invoice) }}" class="text-green-600 ml-2">Print</a>
                             </td>
                         </tr>
                         @endforeach

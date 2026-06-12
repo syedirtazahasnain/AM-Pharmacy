@@ -28,7 +28,7 @@ Route::middleware('auth')->group(function () {
     // Route::get('/scraping/status/{batchId}', [ScrapingController::class, 'status'])->name('scraping.status');
     // Route::post('/scraping/retry/{batchId}', [ScrapingController::class, 'retry'])->name('scraping.retry');
 
-
+Route::get('/products/data', [ProductController::class, 'data'])->name('products.data');
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

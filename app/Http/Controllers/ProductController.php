@@ -6,13 +6,46 @@ use App\Models\Product;
 use App\Models\Manufacturer;
 use App\Models\StockBatch;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('manufacturer', 'batches')->get();
-        return view('products.index', compact('products'));
+        return view('products.index');
+    }
+
+    // New method for DataTables AJAX
+    public function data(Request $request)
+    {
+        $query = Product::with(['manufacturer', 'batches']);
+
+        return DataTables::of($query)
+            ->addColumn('manufacturer', function ($product) {
+                return $product->manufacturer?->name ?? '-';
+            })
+            ->addColumn('pack_size', function ($product) {
+                return $product->pack_size ?? '-';
+            })
+            ->addColumn('mrp', function ($product) {
+                return 'Rs. ' . number_format($product->mrp, 2);
+            })
+            ->addColumn('stock', function ($product) {
+                return $product->available_stock ?? 0;
+            })
+            ->addColumn('actions', function ($product) {
+                return '
+                    <a href="'.route('products.edit', $product).'" class="text-blue-600 hover:text-blue-900">Edit</a>
+                    <form action="'.route('products.destroy', $product).'" method="POST" class="inline">
+                        '.csrf_field().'
+                        '.method_field('DELETE').'
+                        <button type="submit" class="text-red-600 hover:text-red-900 ml-2"
+                                onclick="return confirm(\'Delete this product?\')">Delete</button>
+                    </form>
+                ';
+            })
+            ->rawColumns(['actions'])
+            ->make(true);
     }
 
     public function create()

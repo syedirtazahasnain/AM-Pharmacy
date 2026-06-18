@@ -1,0 +1,78 @@
+# /var/www/AM-Pharmacy/docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: am-pharmacy-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./storage:/var/www/storage
+      - ./public:/var/www/public
+      - ./bootstrap/cache:/var/www/bootstrap/cache
+    networks:
+      - am-pharmacy-network
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=http://31.97.111.241:3002
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=household
+      - DB_USERNAME=household_user
+      - DB_PASSWORD=secure_password_here
+    depends_on:
+      - db
+
+  webserver:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: am-pharmacy-nginx
+    restart: unless-stopped
+    ports:
+      - "3002:80"
+    volumes:
+      - ./public:/var/www/public
+      - ./storage:/var/www/storage
+    networks:
+      - am-pharmacy-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: am-pharmacy-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: household
+      MYSQL_USER: household_user
+      MYSQL_PASSWORD: secure_password_here
+      MYSQL_ROOT_PASSWORD: root_secure_password_here
+    ports:
+      - "3308:3306"  # Different port to avoid conflict
+    volumes:
+      - household_db_data:/var/lib/mysql
+    networks:
+      - am-pharmacy-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:alpine
+    container_name: am-pharmacy-redis
+    restart: unless-stopped
+    ports:
+      - "6381:6379"  # Different port to avoid conflict
+    networks:
+      - am-pharmacy-network
+
+networks:
+  am-pharmacy-network:
+    driver: bridge
+
+volumes:
+  household_db_data:

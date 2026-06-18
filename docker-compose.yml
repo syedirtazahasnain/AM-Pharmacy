@@ -22,11 +22,19 @@ services:
       - DB_CONNECTION=mysql
       - DB_HOST=db
       - DB_PORT=3306
-      - DB_DATABASE=household
-      - DB_USERNAME=household_user
-      - DB_PASSWORD=secure_password_here
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       - db
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   webserver:
     build:
@@ -43,32 +51,56 @@ services:
       - am-pharmacy-network
     depends_on:
       - app
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
 
   db:
     image: mysql:8.0
     container_name: am-pharmacy-db
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: household
-      MYSQL_USER: household_user
-      MYSQL_PASSWORD: secure_password_here
-      MYSQL_ROOT_PASSWORD: root_secure_password_here
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "3308:3306"  # Different port to avoid conflict
+      - "3308:3306"
     volumes:
       - household_db_data:/var/lib/mysql
     networks:
       - am-pharmacy-network
     command: --default-authentication-plugin=mysql_native_password
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   redis:
     image: redis:alpine
     container_name: am-pharmacy-redis
     restart: unless-stopped
     ports:
-      - "6381:6379"  # Different port to avoid conflict
+      - "6381:6379"
     networks:
       - am-pharmacy-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
 networks:
   am-pharmacy-network:

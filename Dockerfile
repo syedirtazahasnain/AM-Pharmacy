@@ -1,4 +1,3 @@
-# /var/www/AM-Pharmacy/Dockerfile
 FROM php:8.4-fpm
 
 # Install system dependencies
@@ -27,7 +26,7 @@ WORKDIR /var/www
 # Copy application files
 COPY . .
 
-# Install PHP dependencies
+# Install PHP dependencies (with optimizations)
 RUN composer install --optimize-autoloader --no-dev
 
 # Install Node dependencies and build assets
@@ -38,8 +37,8 @@ RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage \
     && chmod -R 775 /var/www/bootstrap/cache
 
-# Copy .env.production to .env
-COPY .env.example .env
+# Copy .env.production to .env (or use your production env file)
+COPY .env.production .env
 
 # Generate application key
 RUN php artisan key:generate

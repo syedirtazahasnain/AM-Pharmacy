@@ -38,7 +38,7 @@ RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/bootstrap/cache
 
 # Copy .env.production to .env (or use your production env file)
-COPY .env.production .env
+COPY .env.example .env
 
 # Generate application key
 RUN php artisan key:generate
